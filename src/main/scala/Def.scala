@@ -40,9 +40,10 @@ case class Player(
 }
 
 object Game {
+  val DefaultBurnCount: Int = 7
   def init(players: List[Player]): Game = {
     val firstPlayer :: otherPlayers = players
-    val (burn, deck) = Card.randomized splitAt 7
+    val (burn, deck) = Card.randomized splitAt DefaultBurnCount
     Game(firstPlayer, otherPlayers, pot = 0, deck, burn)
   }
 }
