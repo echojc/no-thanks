@@ -1,22 +1,13 @@
 import shapeless.{ :: ⇒ _, _ }
 import scalaz.syntax.id._
 
-trait Choice
-case object Take extends Choice
-case object Pass extends Choice
-
-trait Strategy {
-  def choose(game: Game): Choice
-}
-
 object Impl {
 
-  def next(strategy: Strategy)(game: Game): Game =
+  def next(game: Game): Game =
     game |>
-    choose(strategy) |>
+    choose(game.currentPlayer.strategy) |>
     applyChoice(game) |>
-    cyclePlayers |>
-    saveLastState(game)
+    cyclePlayers
 
   def choose(strategy: Strategy)(game: Game): Choice =
     strategy.choose(game) match {
@@ -27,12 +18,11 @@ object Impl {
         choice
     }
 
-  def applyChoice(game: Game)(choice: Choice): Game = {
-    val coinsL = lens[Game] >> 'currentPlayer >> 'coins
-    val cardsL = lens[Game] >> 'currentPlayer >> 'cards
-    val potL   = lens[Game] >> 'pot
-    val deckL  = lens[Game] >> 'deck
-
+  lazy val coinsL = lens[Game] >> 'currentPlayer >> 'coins
+  lazy val cardsL = lens[Game] >> 'currentPlayer >> 'cards
+  lazy val potL   = lens[Game] >> 'pot
+  lazy val deckL  = lens[Game] >> 'deck
+  def applyChoice(game: Game)(choice: Choice): Game =
     choice match {
       case Take ⇒
         (coinsL ~ potL ~ cardsL ~ deckL).modify(game) {
@@ -46,22 +36,13 @@ object Impl {
             (coins - 1, pot + 1)
         }
     }
-  }
 
-  def cyclePlayers(game: Game): Game = {
-    val currentPlayerL = lens[Game] >> 'currentPlayer
-    val otherPlayersL  = lens[Game] >> 'otherPlayers
-
+  lazy val currentPlayerL = lens[Game] >> 'currentPlayer
+  lazy val otherPlayersL  = lens[Game] >> 'otherPlayers
+  def cyclePlayers(game: Game): Game =
     (currentPlayerL ~ otherPlayersL).modify(game) {
       case (currentPlayer, otherPlayers) ⇒
         val nextPlayer :: rest = (otherPlayers :+ currentPlayer)
         (nextPlayer, rest)
     }
-  }
-
-  def saveLastState(last: Game)(game: Game): Game = {
-    val lastL = lens[Game] >> 'last
-
-    lastL.set(game)(Option(last))
-  }
 }

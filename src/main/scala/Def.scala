@@ -1,5 +1,22 @@
 import scala.util.Random
 
+trait Choice
+case object Take extends Choice
+case object Pass extends Choice
+
+object Strategy {
+  object AlwaysTake extends Strategy {
+    def choose(game: Game): Choice = Take
+  }
+  object AlwaysPass extends Strategy {
+    def choose(game: Game): Choice = Pass
+  }
+}
+
+trait Strategy {
+  def choose(game: Game): Choice
+}
+
 object Card {
   val Reference: List[Card] =
     ((3 to 35) map Card.apply).toList
@@ -12,20 +29,21 @@ case class Card(
 
 object Player {
   val DefaultCoins: Int = 7
-  def init: Player = Player(DefaultCoins, Nil)
+  def init(strategy: Strategy): Player = Player(DefaultCoins, Nil, strategy)
 }
 case class Player(
   coins: Int,
-  cards: List[Card]
+  cards: List[Card],
+  strategy: Strategy
 ) {
   def isEmpty: Boolean = coins == 0
 }
 
 object Game {
-  def init(playerCount: Int): Game = {
-    val firstPlayer :: otherPlayers = List.fill(playerCount)(Player.init)
+  def init(players: List[Player]): Game = {
+    val firstPlayer :: otherPlayers = players
     val (burn, deck) = Card.randomized splitAt 7
-    Game(firstPlayer, otherPlayers, pot = 0, deck, burn, None)
+    Game(firstPlayer, otherPlayers, pot = 0, deck, burn)
   }
 }
 case class Game(
@@ -33,8 +51,8 @@ case class Game(
   otherPlayers: List[Player],
   pot: Int,
   deck: List[Card],
-  burn: List[Card],
-  last: Option[Game]
+  burn: List[Card]
 ) {
-  def currentCard = deck.head
+  def currentCard: Card = deck.head
+  def isFinished: Boolean = deck.isEmpty
 }
