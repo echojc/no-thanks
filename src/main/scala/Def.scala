@@ -25,8 +25,6 @@ object Card {
 
   def grouped(cards: List[Card]): List[List[Card]] =
     cards.sortBy(_.value).foldRight(List.empty[List[Card]]) {
-      case (next, Nil) ⇒
-        List(List(next))
       case (next, (run @ head :: _) :: rest) if head.value == next.value + 1 ⇒
         (next :: run) :: rest
       case (next, rest) ⇒
