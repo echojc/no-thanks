@@ -1,4 +1,5 @@
 import scala.util.Try
+import Pretty._
 
 object Main extends App {
   val DefaultPlayerCount: Int = 6
@@ -14,5 +15,5 @@ object Main extends App {
   val finalState: Game =
     (turns dropWhile (!_.isFinished)).head
 
-  println(finalState)
+  prettyPrint(finalState)
 }
